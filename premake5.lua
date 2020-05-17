@@ -15,5 +15,11 @@ project "garrysmod"
    
    files { "src/**.hpp", "src/**.cpp" }
 
+   includedirs { "3rd_party/" }
+   libdirs { "3rd_party/" }
+
+   -- lua
+   links { "3rd_party/lua/lib/lua51" }
+
    filter "configurations:Release"
       optimize "On"

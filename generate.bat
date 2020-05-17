@@ -1,7 +1,7 @@
-#src
+::src
 premake5 vs2019
 
-#lua
+::lua
 pushd 3rd_party\lua\
 call "generate.bat"
 
