@@ -7,6 +7,7 @@ DWORD WINAPI DllMain(HMODULE module, DWORD reason, LPVOID reserved)
 	if (reason == DLL_PROCESS_ATTACH)
 	{
 		lua.Init();
+
 		return 1;
 	}
 

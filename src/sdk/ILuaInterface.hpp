@@ -287,6 +287,13 @@ public:
 	virtual void            Require(const char* name) = 0;
 	virtual const char* GetActualTypeName(int type) = 0;
 
+	inline lua_State* GetState() const
+	{
+		return state;
+	}
+
+private:
+
 	lua_State* state;
 };
 
