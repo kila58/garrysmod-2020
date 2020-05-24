@@ -64,6 +64,12 @@ namespace Type
 	};
 }
 
+struct UserData
+{
+	void* data;
+	unsigned char	type;
+};
+
 typedef int(*CLuaFunction) (lua_State*);
 
 class ILuaObject
@@ -178,7 +184,7 @@ public:
 	virtual void            Insert(int iStackPos) = 0;
 	virtual void            Remove(int iStackPos) = 0;
 	virtual int                Next(int iStackPos) = 0;
-	virtual void* NewUserdata(unsigned int iSize) = 0;
+	virtual UserData* NewUserdata(unsigned int iSize) = 0;
 	virtual void            ThrowError(const char* strError) = 0;
 	virtual void            CheckType(int iStackPos, int iType) = 0;
 	virtual void            ArgError(int iArgNum, const char* strMessage) = 0;
@@ -188,7 +194,7 @@ public:
 	virtual double            GetNumber(int iStackPos = -1) = 0;
 	virtual bool            GetBool(int iStackPos = -1) = 0;
 	virtual CLuaFunction    GetCFunction(int iStackPos = -1) = 0;
-	virtual void* GetUserdata(int iStackPos = -1) = 0;
+	virtual UserData* GetUserdata(int iStackPos = -1) = 0;
 	virtual void            PushNil() = 0;
 	virtual void            PushString(const char* val, unsigned int iLen = 0) = 0;
 	virtual void            PushNumber(double val) = 0;
