@@ -17,7 +17,7 @@ project "lua51"
    language "C++"
    architecture "x64"
    targetdir "lib/"
-   systemversion "10.0.18362.0"
+   systemversion "10.0.19041.0"
    characterset "MBCS"
    cppdialect "C++17"
    

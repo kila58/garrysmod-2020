@@ -1,5 +1,6 @@
 #pragma once
 
+typedef unsigned __int64 ptr;
 typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned long ulong;

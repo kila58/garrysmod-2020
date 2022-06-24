@@ -2,6 +2,9 @@
 
 #include "../src/garrysmod.hpp"
 
+#include "surface.hpp"
+#include "player.hpp"
+
 class Lua
 {
 public:

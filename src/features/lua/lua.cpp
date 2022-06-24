@@ -10,7 +10,7 @@ int L_entsGetAll(lua_State* L)
 	client->GetField(-1, "GetAll");
 	client->PCall(0, 1, 0);
 	bool exists = client->IsType(-1, Type::TABLE);
-	ILuaObject* table = client->GetObjectA(-1);
+	ILuaObject* table = client->GetObject(-1);
 	client->Pop(client->Top());
 
 	if (table->isTable())
@@ -18,6 +18,48 @@ int L_entsGetAll(lua_State* L)
 
 	if (exists)
 		menu->PushLuaObject(table);
+
+	return 1;
+}
+
+int L_GetEnt(lua_State* state)
+{
+	if (!menu->IsType(1, Type::NUMBER))
+	{
+		menu->PushNil();
+		return 1;
+	}
+
+	CBaseEntity* ent = (CBaseEntity*)cliententitylist->GetClientEntity(menu->GetNumber(1));
+
+	if (!ent)
+	{
+		menu->PushNil();
+		return 1;
+	}
+
+	/*ClientClass* cc = ent->GetClientClass();
+
+	if (!cc || !cc->m_pNetworkName)
+	{
+		menu->PushNil();
+		return 1;
+	}
+
+	int len = strlen(cc->m_pNetworkName);
+
+	if (1 > len || len > 255)
+	{
+		menu->PushNil();
+		return 1;
+	}*/
+
+	UserData* ud = (UserData*)menu->NewUserdata(sizeof(UserData));
+	ud->type = Type::ENTITY;
+	ud->data = ent;
+
+	menu->CreateMetaTableType("Entity", Type::ENTITY);
+	menu->SetMetaTable(-2);
 
 	return 1;
 }
@@ -69,45 +111,67 @@ int L_ToScreen(lua_State* L)
 	return 2;
 }
 
+int L_hookCallBack(lua_State* L)
+{
+	return 0;
+}
+
+int L_hookAddClient(lua_State* L)
+{
+	client->PushSpecial(0);
+	client->GetField(-1, "hook");
+	client->GetField(-1, "Add");
+	client->PushString(menu->GetString(1));
+	client->PushString(menu->GetString(2));
+	client->PushCFunction(L_hookCallBack);
+	client->PCall(3, 0, 0);
+	client->Pop(client->Top());
+
+	return 0;
+}
+
+std::string menulua = R"(
+local frame = vgui.Create( "DFrame" )
+frame:SetSize( 500, 500 )
+frame:Center()
+frame:MakePopup()
+
+local CatList = vgui.Create( "DCategoryList", frame )
+CatList:Dock( FILL )
+
+local Cat = CatList:Add( "Test category with text contents" )
+Cat:Add( "Item 1" )
+local button = Cat:Add( "Item 2" )
+button.DoClick = function()
+	print( "Item 2 was clicked." )
+end
+
+-- The contents can be any panel, even a DPanelList
+local Cat2 = CatList:Add( "Test category with panel contents" )
+Cat2:SetTall( 100 )
+
+local Contents = vgui.Create( "DButton" )
+Contents:SetText( "This is the content of the category" )
+Cat2:SetContents( Contents )
+
+CatList:InvalidateLayout( true )
+)";
+
 bool Lua::Init()
 {
-	typedef void* (*CreateInterface_t)(const char* name, int* pReturnCode);
-	CreateInterface_t CreateInterface = (CreateInterface_t)GetProcAddress(GetModuleHandle("lua_shared.dll"), "CreateInterface");
-
-	int bruh = 0;
-	luashared = (LuaShared*)CreateInterface("LUASHARED003", &bruh);
-	if (!luashared)
-		return false;
-
-	client = luashared->GetLuaInterface(CLIENT);
+	/*client = luashared->GetLuaInterface(CLIENT);
 	if (!client)
-		return false;
+		return false;*/
 
 	menu = luashared->GetLuaInterface(MENU);
 	if (!menu)
 		return false;
 
-	/*menu->PushSpecial(0);
-	menu->CreateTable();
-	menu->PushCFunction(L_entsGetAll);
-	menu->SetField(-2, "GetAll");
-	menu->SetField(-2, "ents");
-	menu->Pop(menu->Top());*/
+	//initalize fonts
 
-	menu->PushSpecial(0);
-	menu->PushCFunction(L_chatOpen);
-	menu->SetField(-2, "ChatOpen");
-	menu->Pop(menu->Top());
+	//menu->RunString("", "", menulua.c_str(), true, true);
 
-	menu->PushSpecial(0);
-	menu->GetField(-1, "FindMetaTable");
-	menu->PushString("Vector", 0);
-	menu->PCall(1, 1, 0);
-	menu->PushCFunction(L_ToScreen);
-	menu->SetField(-2, "ToScreen");
-	menu->Pop(menu->Top());
-
-	menu->RunString("", "", "concommand.Add('menu_run', function(a, b, c, d) RunString(d, '', true) end)", true, true);
+	//menu->RunString("", "", "concommand.Add('menu_run', function(a, b, c, d) RunString(d, '', true) end)", true, true);
 
 	return true;
 }

@@ -1,5 +1,5 @@
 ::src
-premake5 vs2019
+premake5 vs2022
 
 ::lua
 pushd 3rd_party\lua\
