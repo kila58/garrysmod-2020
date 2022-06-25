@@ -7,22 +7,6 @@ void __fastcall View_Render(void* instance, void* rect)
 {
 	original_function(instance, rect);
 
-	static Material* mat;
-	if (!mat)
-	{
-		mat = materialsystem->CreateMaterial("models/debug/debugwhite");
-
-		if (mat)
-		{
-			mat->SetMaterialVarFlag(MATERIAL_VAR_ALPHATEST, true);
-			mat->SetMaterialVarFlag(MATERIAL_VAR_NOFOG, true);
-			mat->SetMaterialVarFlag(MATERIAL_VAR_IGNOREZ, true);
-			mat->SetMaterialVarFlag(MATERIAL_VAR_SELFILLUM, true);
-			mat->SetMaterialVarFlag(MATERIAL_VAR_FLAT, true);
-			mat->IncrementReferenceCount();
-		}
-	}
-
 	auto cstate = luashared->GetLuaInterface(CLIENT);
 	if (!cstate)
 		return;
@@ -31,7 +15,30 @@ void __fastcall View_Render(void* instance, void* rect)
 	if (!mstate)
 		return;
 
-	LuaSurface::Start3D(cstate);
+	static Material* mat;
+	if (!mat)
+	{
+		mstate->PushSpecial(0);
+		mstate->GetField(-1, "GetOutlineMat");
+		mstate->PCall(0, 1, 0);
+
+		mat = (Material*)mstate->GetObject(-1)->GetUserData();
+		mstate->Pop(mstate->Top());
+
+		//mat = materialsystem->CreateMaterial("models/debug/debugwhite");
+
+		if (mat)
+		{
+			//mat->SetMaterialVarFlag(MATERIAL_VAR_ALPHATEST, true);
+			//mat->SetMaterialVarFlag(MATERIAL_VAR_NOFOG, true);
+			//mat->SetMaterialVarFlag(MATERIAL_VAR_IGNOREZ, true);
+			//mat->SetMaterialVarFlag(MATERIAL_VAR_SELFILLUM, true);
+			//mat->SetMaterialVarFlag(MATERIAL_VAR_FLAT, true);
+			mat->IncrementReferenceCount();
+		}
+	}
+
+	LuaRender::Start3D(cstate);
 
 	for (int i = 0; i <= LuaPlayer::GetCount(cstate); i++)
 	{
@@ -50,34 +57,39 @@ void __fastcall View_Render(void* instance, void* rect)
 
 		Color team = ent->GetTeamColor(cstate);
 
-		enginemodel->ForceMaterialOverride(mat);
+		LuaRender::SetStencilEnable(cstate, true);
 
-		mat->SetMaterialVarFlag(MATERIAL_VAR_SELFILLUM, true);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_FLAT, true);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_NOFOG, true);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_IGNOREZ, true);
-
-		LuaSurface::SetBlend(cstate, 1);
-		LuaSurface::SetColorModulation(cstate, team.r / 255.0f, team.g / 255.0f, team.b / 255.0f);
-
-		LuaPlayer::DrawModel(cstate, i, 32);
-
-		mat->SetMaterialVarFlag(MATERIAL_VAR_SELFILLUM, false);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_FLAT, false);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_NOFOG, false);
-		mat->SetMaterialVarFlag(MATERIAL_VAR_IGNOREZ, false);
+		LuaRender::SetStencilReferenceValue(cstate, 1);
+		LuaRender::SetStencilCompareFunction(cstate, 1);
+		LuaRender::SetStencilFailOperation(cstate, 3);
 
 		enginemodel->ForceMaterialOverride(nullptr);
 
+		LuaRender::SetBlend(cstate, 0);
+		LuaRender::SetColorModulation(cstate, 0, 0, 0);
+
 		LuaPlayer::DrawModel(cstate, i, 32);
 
-		//LuaSurface::SetColorModulation(cstate, 1.0f, 1.0f, 1.0f);
-		//LuaPlayer::DrawModel(cstate, i, 32);
+		LuaRender::SetBlend(cstate, 1);
+		LuaRender::SetColorModulation(cstate, 1, 1, 1);
+
+		LuaRender::SetStencilCompareFunction(cstate, 6);
+		LuaRender::SetStencilFailOperation(cstate, 1);
+
+		enginemodel->ForceMaterialOverride(mat);
+
+		LuaRender::SetColorModulation(cstate, team.r / 255.0f, team.g / 255.0f, team.b / 255.0f);
+
+		LuaPlayer::DrawModel(cstate, i, 32);
+
+		enginemodel->ForceMaterialOverride(nullptr);
+
+		LuaRender::SetStencilEnable(cstate, false);
 	}
 
-	LuaSurface::End3D(cstate);
+	LuaRender::End3D(cstate);
 
-	LuaSurface::Start2D(cstate);
+	LuaRender::Start2D(cstate);
 
 	for (int i = 0; i <= LuaPlayer::GetCount(cstate); i++)
 	{
@@ -107,10 +119,15 @@ void __fastcall View_Render(void* instance, void* rect)
 		LuaSurface::DrawText(mstate, LuaPlayer::GetName(cstate, i));
 	}
 
+	//mstate->PushSpecial(0);
+	//mstate->GetField(-1, "MenuFrameRender");
+	//mstate->PCall(0, 1, 0);
+	//mstate->Pop(mstate->Top());
+
 	//LuaSurface::SetDrawColor(cstate, 255, 255, 255);
 	//LuaSurface::DrawLine(cstate, 0, 0, 200, 200);
 
-	LuaSurface::End2D(cstate);
+	LuaRender::End2D(cstate);
 }
 
 bool PlayerESP::Init()

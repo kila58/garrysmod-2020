@@ -3,6 +3,7 @@
 #include "../src/garrysmod.hpp"
 
 #include "surface.hpp"
+#include "render.hpp"
 #include "player.hpp"
 
 class Lua

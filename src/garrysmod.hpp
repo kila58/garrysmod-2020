@@ -28,6 +28,7 @@ inline T GetVirtual(void* table, size_t index)
 #include "sdk/ILuaInterface.hpp"
 	#include "features/lua/player.hpp"
 	#include "features/lua/surface.hpp"
+	#include "features/lua/render.hpp"
 
 #include "sdk/IMaterialSurface.hpp"
 #include "sdk/BaseEntity.hpp"

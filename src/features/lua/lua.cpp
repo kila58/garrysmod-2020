@@ -132,29 +132,21 @@ int L_hookAddClient(lua_State* L)
 
 std::string menulua = R"(
 local frame = vgui.Create( "DFrame" )
+frame:SetTitle( "PaintManual Test" )
 frame:SetSize( 500, 500 )
-frame:Center()
-frame:MakePopup()
+frame:SetPaintedManually( true )
 
-local CatList = vgui.Create( "DCategoryList", frame )
-CatList:Dock( FILL )
-
-local Cat = CatList:Add( "Test category with text contents" )
-Cat:Add( "Item 1" )
-local button = Cat:Add( "Item 2" )
-button.DoClick = function()
-	print( "Item 2 was clicked." )
+function MenuFrameRender()
+	frame:PaintManual()
 end
 
--- The contents can be any panel, even a DPanelList
-local Cat2 = CatList:Add( "Test category with panel contents" )
-Cat2:SetTall( 100 )
-
-local Contents = vgui.Create( "DButton" )
-Contents:SetText( "This is the content of the category" )
-Cat2:SetContents( Contents )
-
-CatList:InvalidateLayout( true )
+function GetOutlineMat()
+	return CreateMaterial("outline", "UnlitGeneric", {
+		["$basetexture"] = "white",
+		["$wireframe"] = "1",
+		["$color2"] = "[2 2 2]",
+	})
+end
 )";
 
 bool Lua::Init()
@@ -169,7 +161,7 @@ bool Lua::Init()
 
 	//initalize fonts
 
-	//menu->RunString("", "", menulua.c_str(), true, true);
+	menu->RunString("", "", menulua.c_str(), true, true);
 
 	//menu->RunString("", "", "concommand.Add('menu_run', function(a, b, c, d) RunString(d, '', true) end)", true, true);
 
