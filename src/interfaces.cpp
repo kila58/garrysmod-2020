@@ -16,8 +16,16 @@ bool Interfaces::Init()
 	cliententitylist = GetInterface<CClientEntityList*>("client.dll", "VClientEntityList003");
 	XASSERT(cliententitylist);
 
-	clientinterface = GetInterface<CClientEntityList*>("client.dll", "VClient017");
-	XASSERT(clientinterface);
+	client = GetInterface<CBaseClientDLL*>("client.dll", "VClient017");
+	XASSERT(client);
+
+	steamclient = ((ISteamClient*(__cdecl*)(void))GetProcAddress(GetModuleHandle("steam_api64.dll"), "SteamClient"))();
+	XASSERT(steamclient);
+
+	HSteamUser steamuser = ((HSteamUser(__cdecl*)(void))GetProcAddress(GetModuleHandle("steam_api64.dll"), "SteamAPI_GetHSteamUser"))();
+	HSteamPipe steampipe = ((HSteamPipe(__cdecl*)(void))GetProcAddress(GetModuleHandle("steam_api64.dll"), "SteamAPI_GetHSteamPipe"))();
+	steamhttp = steamclient->GetISteamHTTP(steamuser, steampipe, "STEAMHTTP_INTERFACE_VERSION003");
+	XASSERT(steamhttp);
 
 	return true;
 }

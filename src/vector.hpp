@@ -1,8 +1,23 @@
 #pragma once
 
-typedef float VMatrix[3][4];
 static const float pi = 3.14159265358979323846f;
 static const float epsilon = 1.401298e-45f;
+
+class VMatrix
+{
+public:
+	inline float* operator[](int i)
+	{
+		return m[i];
+	}
+
+	inline const float* operator[](int i) const
+	{
+		return m[i];
+	}
+
+	float m[3][4];
+};
 
 class Quaternion
 {
@@ -346,6 +361,13 @@ inline void VectorRotate(const Vector& in, const VMatrix& matrix, Vector& out)
 	out.x = in.Dot(Vector(matrix[0][0], matrix[0][1], matrix[0][2]));
 	out.y = in.Dot(Vector(matrix[1][0], matrix[1][1], matrix[1][2]));
 	out.z = in.Dot(Vector(matrix[2][0], matrix[2][1], matrix[2][2]));
+}
+
+inline void VectorRotate3x4(Vector in, VMatrix& matrix, Vector& out)
+{
+	out.x = in.Dot(Vector(matrix[0][0], matrix[0][1], matrix[0][2])) + matrix[0][3];
+	out.y = in.Dot(Vector(matrix[1][0], matrix[1][1], matrix[1][2])) + matrix[1][3];
+	out.z = in.Dot(Vector(matrix[2][0], matrix[2][1], matrix[2][2])) + matrix[2][3];
 }
 
 inline void VectorTransform(const Vector& in, const VMatrix& matrix, Vector& out)

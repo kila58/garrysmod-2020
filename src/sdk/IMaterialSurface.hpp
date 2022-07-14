@@ -50,7 +50,13 @@ public:
 	virtual void EndRender() = 0;
 };
 
-class Material
+class ITexture
+{
+public:
+
+};
+
+class IMaterial
 {
 public:
 	void IncrementReferenceCount()
@@ -67,9 +73,9 @@ public:
 class MaterialSystem
 {
 public:
-	Material* CreateMaterial(char const* name)
+	IMaterial* CreateMaterial(char const* name)
 	{
-		return (GetVirtual<Material* (__thiscall*)(void*, char const*, void*)>(this, 74))(this, name, nullptr);
+		return (GetVirtual<IMaterial* (__thiscall*)(void*, char const*, void*)>(this, 74))(this, name, nullptr);
 	}
 
 	MatRenderContext* GetRenderContext()
@@ -81,8 +87,8 @@ public:
 class EngineModel
 {
 public:
-	void ForceMaterialOverride(Material* newMaterial, OverrideType_t nOverrideType = OVERRIDE_NORMAL)
+	void ForceMaterialOverride(IMaterial* newMaterial, OverrideType_t nOverrideType = OVERRIDE_NORMAL)
 	{
-		return GetVirtual<void(__thiscall*)(void*, Material*, OverrideType_t)>(this, 1)(this, newMaterial, nOverrideType);
+		return GetVirtual<void(__thiscall*)(void*, IMaterial*, OverrideType_t)>(this, 1)(this, newMaterial, nOverrideType);
 	}
 };

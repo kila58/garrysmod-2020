@@ -10,5 +10,3 @@ public:
 private:
 	Hook* hook = nullptr;
 };
-
-extern Mask mask;

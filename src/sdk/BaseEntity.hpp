@@ -1,23 +1,96 @@
-#pragma
+#pragma once
 
-class CBaseEntity
+class IClientEntity
 {
 public:
-
-	void* GetClientEntity()
+	ClientClass* GetClientClass()
 	{
-		return GetVirtual<void* (__thiscall*)(void*)>(this, 4)(this);
+		return GetVirtual<ClientClass* (__thiscall*)(void*)>(this, 2)(this);
 	}
 
 	int GetIndex()
 	{
-		void* ptr = GetClientEntity();
-		return GetVirtual<int (__thiscall*)(void*)>(ptr, 9)(ptr);
+		return GetVirtual<int (__thiscall*)(void*)>(this, 9)(this);
+	}
+};
+
+class IClientRenderable
+{
+public:
+	void DrawModel(int flag = 1)
+	{
+		return GetVirtual<void(__thiscall*)(void*, int)>(this, 10)(this, flag);
+	}
+};
+
+class CBaseEntity
+{
+private:
+	ptr GetOffset(const char* name)
+	{
+		return netvars.Get(name, GetClientEntity()->GetClientClass()->m_pRecvTable);
+	}
+	template <typename T>
+	T GetNetVar(const char* name)
+	{
+		return *(T*)(this + GetOffset(name));
+	}
+	template <typename T>
+	void SetNetVar(const char* name, const T& what)
+	{
+		*(T*)(this + GetOffset(name)) = what;
+	}
+	template <typename T>
+	T Get(ptr offset)
+	{
+		return *(T*)(this + offset);
+	}
+	template <typename T>
+	void Set(const T& what, ptr offset)
+	{
+		*(T*)(this + offset) = what;
+	}
+
+public:
+
+	IClientEntity* GetClientEntity()
+	{
+		return GetVirtual<IClientEntity* (__thiscall*)(void*)>(this, 4)(this);
+	}
+
+	IClientRenderable* GetClientRenderable()
+	{
+		return GetVirtual<IClientRenderable* (__thiscall*)(void*)>(this, 5)(this);
+	}
+
+	__int64 GetCreationID() //serverside only??
+	{
+		return Get<__int64>(0x7F0);
+	}
+
+	int GetIndex()
+	{
+		return GetClientEntity()->GetIndex();
 	}
 
 	int GetHealth()
 	{
-		return *(int*)(this + 0x90/*var.m_iHealth*/);
+		return GetNetVar<int>("m_iHealth");
+	}
+
+	VMatrix GetWorldTransformMatrix()
+	{
+		return Get<VMatrix>(GetOffset("m_CollisionGroup") - 0x4C);
+	}
+
+	Vector OBBMins()
+	{
+		return GetNetVar<Vector>("m_vecMins");
+	}
+
+	Vector OBBMaxs()
+	{
+		return GetNetVar<Vector>("m_vecMaxs");
 	}
 
 	bool IsPlayer(ILuaInterface* state)
@@ -25,7 +98,16 @@ public:
 		if (!state)
 			return false;
 
-		return LuaPlayer::IsPlayer(state, GetIndex());
+		return LuaBaseEntity::IsPlayer(state, GetIndex());
+	}
+
+	bool IsLocalPlayer(ILuaInterface* state)
+	{
+		if (!state)
+			return false;
+
+		//return (LuaBaseEntity::LocalPlayer(state) == this); //busted
+		return false;
 	}
 
 	bool IsAlive(ILuaInterface* state)
@@ -33,7 +115,7 @@ public:
 		if (!state)
 			return false;
 
-		return LuaPlayer::IsAlive(state, GetIndex());
+		return LuaBaseEntity::IsAlive(state, GetIndex());
 	}
 
 	bool IsDormant(ILuaInterface* state)
@@ -41,7 +123,7 @@ public:
 		if (!state)
 			return false;
 
-		return LuaPlayer::IsDormant(state, GetIndex());
+		return LuaBaseEntity::IsDormant(state, GetIndex());
 	}
 
 	std::string GetName(ILuaInterface* state)
@@ -49,7 +131,7 @@ public:
 		if (!state)
 			return "unknown";
 
-		return LuaPlayer::GetName(state, GetIndex());
+		return LuaBaseEntity::GetName(state, GetIndex());
 	}
 
 	Color GetTeamColor(ILuaInterface* state)
@@ -57,6 +139,11 @@ public:
 		if (!state)
 			return Color();
 
-		return LuaPlayer::GetTeamColor(state, GetIndex());
+		return LuaBaseEntity::GetTeamColor(state, GetIndex());
+	}
+
+	void DrawModel(int flag = 1)
+	{
+		return GetClientRenderable()->DrawModel(flag);
 	}
 };

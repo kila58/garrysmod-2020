@@ -21,5 +21,8 @@ project "garrysmod"
    -- lua
    links { "3rd_party/lua/lib/lua51" }
 
+   -- detours
+   links { "3rd_party/detours/lib/detours" }
+
    filter "configurations:Release"
       optimize "On"

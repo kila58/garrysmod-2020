@@ -16,6 +16,28 @@ public:
 	float r, g, b;
 };
 
+inline Color HexToRGB(uint32_t hex)
+{
+	Color res;
+	res.r = ((hex >> 16) & 0xFF) / 255.0;
+	res.g = ((hex >> 8) & 0xFF) / 255.0;
+	res.b = (hex & 0xFF) / 255.0;
+
+	return res;
+}
+
+inline Color HexToRGB(std::string hex, bool css)
+{
+	std::string str = hex;
+	if (css)
+		str.erase(0, 1); //remove #
+
+	int r, g, b;
+	sscanf(str.c_str(), "%02x%02x%02x", &r, &g, &b);
+
+	return Color(r, g, b);
+}
+
 inline Color HSVtoRGB(float h, float s, float v)
 {
 	if (s == 0.0f)

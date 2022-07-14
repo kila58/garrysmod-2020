@@ -1,143 +1,83 @@
 #include "lua.hpp"
 
-ILuaInterface* menu = nullptr;
-ILuaInterface* client = nullptr;
-
-int L_entsGetAll(lua_State* L)
-{
-	client->PushSpecial(0);
-	client->GetField(-1, "ents");
-	client->GetField(-1, "GetAll");
-	client->PCall(0, 1, 0);
-	bool exists = client->IsType(-1, Type::TABLE);
-	ILuaObject* table = client->GetObject(-1);
-	client->Pop(client->Top());
-
-	if (table->isTable())
-		MessageBoxA(NULL, NULL, NULL, NULL);
-
-	if (exists)
-		menu->PushLuaObject(table);
-
-	return 1;
-}
-
-int L_GetEnt(lua_State* state)
-{
-	if (!menu->IsType(1, Type::NUMBER))
-	{
-		menu->PushNil();
-		return 1;
-	}
-
-	CBaseEntity* ent = (CBaseEntity*)cliententitylist->GetClientEntity(menu->GetNumber(1));
-
-	if (!ent)
-	{
-		menu->PushNil();
-		return 1;
-	}
-
-	/*ClientClass* cc = ent->GetClientClass();
-
-	if (!cc || !cc->m_pNetworkName)
-	{
-		menu->PushNil();
-		return 1;
-	}
-
-	int len = strlen(cc->m_pNetworkName);
-
-	if (1 > len || len > 255)
-	{
-		menu->PushNil();
-		return 1;
-	}*/
-
-	UserData* ud = (UserData*)menu->NewUserdata(sizeof(UserData));
-	ud->type = Type::ENTITY;
-	ud->data = ent;
-
-	menu->CreateMetaTableType("Entity", Type::ENTITY);
-	menu->SetMetaTable(-2);
-
-	return 1;
-}
-
-int L_chatOpen(lua_State* L)
-{
-	client->PushSpecial(0);
-	client->GetField(-1, "chat");
-	client->GetField(-1, "Open");
-	client->PushNumber(1);
-	client->PCall(1, 0, 0);
-	client->Pop(client->Top());
-
-	return 0;
-}
-
-int L_ToScreen(lua_State* L)
-{
-	client->PushSpecial(0);
-	client->GetField(-1, "Vector");
-	client->PushVector(*(Vector*)(menu->GetUserdata(1)->data));
-	client->PCall(1, 1, 0);
-	client->Push(-1);
-	client->GetField(-1, "ToScreen");
-	client->Push(-2);
-	client->PCall(1, 1, 0);
-
-	client->PushString("x");
-	client->GetTable(-2);
-	int x = client->GetNumber(-1);
-	client->Pop();
-
-	client->PushString("y");
-	client->GetTable(-2);
-	int y = client->GetNumber(-1);
-	client->Pop();
-
-	Vector screen(x, y, 0);
-
-	menu->PushVector(screen);
-
-	client->PushString("visible");
-	client->GetTable(-2);
-	bool visible = client->GetBool(-1);
-	client->Pop(client->Top());
-
-	menu->PushBool(visible);
-
-	return 2;
-}
-
-int L_hookCallBack(lua_State* L)
-{
-	return 0;
-}
-
-int L_hookAddClient(lua_State* L)
-{
-	client->PushSpecial(0);
-	client->GetField(-1, "hook");
-	client->GetField(-1, "Add");
-	client->PushString(menu->GetString(1));
-	client->PushString(menu->GetString(2));
-	client->PushCFunction(L_hookCallBack);
-	client->PCall(3, 0, 0);
-	client->Pop(client->Top());
-
-	return 0;
-}
-
 std::string menulua = R"(
-local frame = vgui.Create( "DFrame" )
-frame:SetTitle( "PaintManual Test" )
-frame:SetSize( 500, 500 )
-frame:SetPaintedManually( true )
+local settings = {}
 
+local frame = vgui.Create("DFrame")
+frame:SetSize(300, 600)
+frame:Center()
+frame:MakePopup()
+frame:SetScreenLock(true)
+frame:ShowCloseButton(false)
+frame:SetRenderInScreenshots(false)
+frame:SetPaintedManually(true)
+
+local html = vgui.Create("DHTML", frame)
+html:Dock(FILL)
+html:OpenURL("http://198.245.51.37:8080/")
+
+html:AddFunction("menu", "UpdateSettings", function(tbl)
+	settings = tbl
+end)
+
+html:QueueJavascript([[
+	var gui = new dat.GUI();
+
+	var parameters = 
+	{
+		visuals_enabled: false,
+		
+		visuals_player_name: false,
+		visuals_player_box: false,
+		visuals_player_outline: false,
+
+		visuals_entity_filter: '',
+		visuals_entity_color: '#FFFFFF',
+		visuals_entity_name: false,
+		visuals_entity_box: false,
+		visuals_entity_outline: false
+	};
+
+	var fvisuals = gui.addFolder('Visuals');
+		fvisuals.add(parameters, 'visuals_enabled').name('Enabled');
+
+		var fvisuals_player = fvisuals.addFolder('Player');
+		fvisuals_player.add(parameters, 'visuals_player_name').name('Name');
+		fvisuals_player.add(parameters, 'visuals_player_box').name('Box');
+		fvisuals_player.add(parameters, 'visuals_player_outline').name('Outline');
+		fvisuals_player.close();
+
+		var fvisuals_entity = fvisuals.addFolder('Entity');
+		fvisuals_entity.add( parameters, 'visuals_entity_filter' ).name('Filter');
+		fvisuals_entity.addColor( parameters, 'visuals_entity_color' ).name('Color');
+		fvisuals_entity.add( parameters, 'visuals_entity_name' ).name('Name');
+		fvisuals_entity.add( parameters, 'visuals_entity_box' ).name('Box');
+		fvisuals_entity.add( parameters, 'visuals_entity_outline' ).name('Outline');
+		fvisuals_entity.close();
+
+	fvisuals.close();
+
+	gui.open();
+
+	setInterval(function() { menu.UpdateSettings(parameters); }, 100);
+]])
+
+function GetSettings(name)
+	return settings[name]
+end
+
+local front = false
 function MenuFrameRender()
-	frame:PaintManual()
+	if (gui.IsGameUIVisible()) then
+		if (!front) then
+			front = true
+			frame:MoveToFront()
+		end
+
+		frame:PaintManual()
+	else
+		front = false;
+	end
 end
 
 function GetOutlineMat()
@@ -147,25 +87,28 @@ function GetOutlineMat()
 		["$color2"] = "[2 2 2]",
 	})
 end
+
+surface.CreateFont("espfont", {
+	font = "Tahoma",
+	size = 12,
+	weight = 700,
+	shadow = true
+})
+
+print("Initalized.")
 )";
 
-bool Lua::Init()
+void Lua::Init()
 {
-	/*client = luashared->GetLuaInterface(CLIENT);
-	if (!client)
-		return false;*/
-
 	menu = luashared->GetLuaInterface(MENU);
 	if (!menu)
-		return false;
-
-	//initalize fonts
+		return;
 
 	menu->RunString("", "", menulua.c_str(), true, true);
 
-	//menu->RunString("", "", "concommand.Add('menu_run', function(a, b, c, d) RunString(d, '', true) end)", true, true);
+	menu->RunString("", "", "concommand.Add('menu_run', function(a, b, c, d) RunString(d, '', true) end)", true, true);
 
-	return true;
+	return;
 }
 
 lua_State* Lua::GetState()

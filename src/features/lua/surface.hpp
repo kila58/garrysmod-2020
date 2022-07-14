@@ -20,6 +20,24 @@ public:
 		state->Pop(state->Top());
 	}
 
+	static void DrawOutlinedRect(ILuaInterface* state, int x, int y, int w, int h, int thickness)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "surface");
+		state->GetField(-1, "DrawOutlinedRect");
+		state->PushNumber(x);
+		state->PushNumber(y);
+		state->PushNumber(w);
+		state->PushNumber(h);
+		state->PushNumber(thickness);
+		state->PCall(5, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
 	static void DrawLine(ILuaInterface* state, int startx, int starty, int endx, int  endy)
 	{
 		if (!state)
@@ -95,5 +113,51 @@ public:
 		state->PCall(1, 1, 0);
 
 		state->Pop(state->Top());
+	}
+
+	static void GetTextSize(ILuaInterface* state, std::string str, int& w, int& h)
+	{
+		if (!state)
+			return ;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "surface");
+		state->GetField(-1, "GetTextSize");
+		state->PushString(str.c_str());
+		state->PCall(1, 2, 0);
+
+		w = state->GetNumber(-2);
+		h = state->GetNumber(-1);
+		state->Pop(state->Top());
+	}
+
+	static int ScreenWidth(ILuaInterface* state)
+	{
+		if (!state)
+			return 0;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "ScrW");
+		state->PCall(0, 1, 0);
+
+		int res = state->GetNumber();
+		state->Pop(state->Top());
+
+		return res;
+	}
+
+	static int ScreenHeight(ILuaInterface* state)
+	{
+		if (!state)
+			return 0;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "ScrH");
+		state->PCall(0, 1, 0);
+
+		int res = state->GetNumber();
+		state->Pop(state->Top());
+
+		return res;
 	}
 };

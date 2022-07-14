@@ -55,6 +55,79 @@ public:
 		state->Pop(state->Top());
 	}
 
+	static void SuppressEngineLighting(ILuaInterface* state, bool suppressLighting)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "SuppressEngineLighting");
+		state->PushBool(suppressLighting);
+		state->PCall(1, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
+	static void* GetRenderTarget(ILuaInterface* state)
+	{
+		if (!state)
+			return nullptr;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "GetRenderTarget");
+		state->PCall(0, 1, 0);
+
+		void* res = (void*)state->GetObject(-1)->GetUserData(); // ITexture*
+		state->Pop(state->Top());
+
+		return res;
+	}
+
+	static void CopyRenderTargetToTexture(ILuaInterface* state, void* tex)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "CopyRenderTargetToTexture");
+		state->PushUserType(tex, Type::TEXTURE);
+		state->PCall(1, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
+	static void SetRenderTarget(ILuaInterface* state, void* tex)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "SetRenderTarget");
+		state->PushUserType(tex, Type::TEXTURE);
+		state->PCall(1, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
+	static void SetMaterial(ILuaInterface* state, void* mat)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "SetMaterial");
+		state->PushUserType(mat, Type::MATERIAL);
+		//state->PushUserdata(mat);
+		state->PCall(1, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
 	static void SetColorModulation(ILuaInterface* state, float r, float g, float b)
 	{
 		if (!state)
@@ -193,6 +266,19 @@ public:
 		state->GetField(-1, "SetStencilReferenceValue");
 		state->PushNumber(referencevalue);
 		state->PCall(1, 1, 0);
+
+		state->Pop(state->Top());
+	}
+
+	static void ClearStencil(ILuaInterface* state)
+	{
+		if (!state)
+			return;
+
+		state->PushSpecial(0);
+		state->GetField(-1, "render");
+		state->GetField(-1, "ClearStencil");
+		state->PCall(0, 1, 0);
 
 		state->Pop(state->Top());
 	}

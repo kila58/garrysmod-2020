@@ -23,5 +23,3 @@ bool Mask::Init()
 
 	return true;
 }
-
-Mask mask;	
